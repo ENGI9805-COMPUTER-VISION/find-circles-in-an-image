@@ -1,5 +1,5 @@
-im = imread('im2.png');
-
+im = imread('im1.png');
+% im = imread('im2.png');
 % d = imdistline;
 % delete(d)
 

@@ -26,10 +26,6 @@ function [centers, metric] = findcirclecenter(varargin)
 %  [CENTERS, METRIC] = CHCENTERS(H, SUPRESSIONTHRESH, SIGMA) also returns
 %  the magnitude of the accumulator array peak associated with each circle
 %  in the column vector METRIC. CENTERS is sorted based on METRIC values.
-% 
-% See also CHACCUM, CHRADII, CHRADIIPHCODE, IMFINDCIRCLES, VISCIRCLES.
-
-%   Copyright 2011 The MathWorks, Inc.
 
 parsedInputs = parse_inputs(varargin{:});
 

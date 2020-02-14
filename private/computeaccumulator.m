@@ -42,22 +42,6 @@ function [accumMatrix, gradientImg] = computeaccumulator(varargin)
 %                     addition, lead to detecting circles with relatively
 %                     faint edges. By default, CHACCUM chooses the
 %                     value automatically using the function GRAYTHRESH.
-% 
-% See also CHCENTERS, CHRADII, CHRADIIPHCODE, IMFINDCIRCLES, VISCIRCLES.
-
-%   Copyright 2011-2016 The MathWorks, Inc.
-
-%   References:
-%   -----------
-%   [1] H. K. Yuen, J. Princen, J. Illingworth, and J. Kittler,
-%       "Comparative study of Hough Transform methods for circle finding,"
-%       Image and Vision Computing, Volume 8, Number 1, 1990, pp. 71-77.
-%
-%   [2] E. R. Davies, Machine Vision: Theory, Algorithms, Practicalities -
-%       Chapter 10, 3rd Edition, Morgan Kauffman Publishers, 2005.
-%
-%   [3] T. J. Atherton, D. J. Kerbyson, "Size invariant circle detection,"
-%       Image and Vision Computing, Volume 17, Number 11, 1999, pp. 795-803.
 
 parsedInputs = parse_inputs(varargin{:});
 

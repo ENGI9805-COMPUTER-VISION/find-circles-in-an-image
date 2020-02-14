@@ -119,27 +119,14 @@ end
 [accumMatrix, gradientImg] = computeaccumulator(A, radiusRange, 'Method','phasecode','ObjectPolarity', ...
                         'bright','EdgeThreshold',[]);
 
-%% Check if the accumulator array is all-zero
-if (~any(accumMatrix(:)))
-    return;
-end                    
-
 %% Estimate the centers
 accumThresh = 1 - sensitivity;
 [centers, metric] = findcirclecenter(accumMatrix, accumThresh);
-
-if (isempty(centers)) % If no centers are found, no further processing is necessary
-    return;
-end
 
 %% Retain circles with metric value greater than threshold corresponding to AccumulatorThreshold 
 idx2Keep = find(metric >= accumThresh);
 centers = centers(idx2Keep,:);
 
-if (isempty(centers)) % If no centers are retained, no further processing is necessary
-    centers = []; % Make it 0x0 empty
-    return;
-end
 
 %% Estimate radii
 if (nargout > 1)

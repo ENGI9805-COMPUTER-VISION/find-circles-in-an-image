@@ -13,15 +13,7 @@ function r_estimated = phasecoding(varargin)
 %   information in the complex accumulator array. CHRADIIPHCODE expects the
 %   accumulator array H to be computed by Phase Coding method in CHACCUM or
 %   any similar method. For details on Phase-Coding, see [1].
-% 
-% See also CHACCUM, CHCENTERS, CHRADII, IMFINDCIRCLES, VISCIRCLES.
 
-%   Copyright 2011 The MathWorks, Inc.
- 
-%   References: 
-%   -----------
-%   [1] T. J. Atherton, D. J. Kerbyson, "Size invariant circle detection,"
-%       Image and Vision Computing, Volume 17, Number 11, 1999, pp. 795-803.
 
 parsedInputs = parse_inputs(varargin{:});
 
