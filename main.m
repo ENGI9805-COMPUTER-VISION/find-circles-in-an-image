@@ -5,5 +5,7 @@ im = imread('im1.png');
 
 [centers,radii] = findcircularobjects(im,[25 120],0.95);
 
-imshow(im)
-h = viscircles(centers,radii);
+imshow(im);
+drawcircles(centers,radii)
+
+% h = viscircles(centers,radii);
