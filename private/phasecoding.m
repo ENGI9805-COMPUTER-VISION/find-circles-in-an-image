@@ -1,4 +1,4 @@
-function r_estimated = phasecoding(varargin)
+function r_estimated = phasecoding(centers, accumMatrix, radiusRange)
 %CHRADIIPHCODE Estimate circle radius for Circular Hough Transform using the Phase-Coding method
 %   R_ESTIMATED = CHRADIIPHCODE(CENTERS, H, R) takes a two-column array CENTERS,
 %   which contains the x (first column) and y (second column) coordinates
@@ -15,12 +15,6 @@ function r_estimated = phasecoding(varargin)
 %   any similar method. For details on Phase-Coding, see [1].
 
 
-parsedInputs = parse_inputs(varargin{:});
-
-centers            = parsedInputs.Centers;
-accumMatrix        = parsedInputs.AccumArray; 
-radiusRange        = parsedInputs.RadiusRange;
-
 %% Check if accumulator array is complex
 if (isreal(accumMatrix))
     warning(message('images:imfindcircles:realAccumArrayForPhaseCode'));
@@ -31,60 +25,4 @@ cenPhase = angle(accumMatrix(sub2ind(size(accumMatrix),round(centers(:,2)),round
 lnR = log(radiusRange);
 r_estimated = exp(((cenPhase + pi)/(2*pi)*(lnR(end) - lnR(1))) + lnR(1)); % Inverse of modified form of Log-coding from Eqn. 8 in [1]
 
-end
-
-function parsedInputs = parse_inputs(varargin)
-
-narginchk(3,3);
-
-persistent parser;
-
-if(isempty(parser))
-    parser = inputParser();
-
-    parser.addRequired('Centers',@checkCenters);
-    parser.addRequired('AccumArray',@checkAccumArray);
-    parser.addRequired('RadiusRange',@checkRadiusRange);
-end
-
-% Parse input
-parser.parse(varargin{:});
-parsedInputs = parser.Results;
-
-validateCenters();
-
-parsedInputs.RadiusRange = double(parsedInputs.RadiusRange);
-
-    function tf = checkCenters(centers)
-        validateattributes(centers,{'numeric'},{'nonsparse','real','positive', ...
-            'nonempty','ncols',2}, mfilename,'centers',1);        
-        tf = true;
-    end
-
-    function tf = checkAccumArray(accumMatrix)
-        validateattributes(accumMatrix,{'numeric'},{'nonempty',...
-            'nonsparse','2d'},mfilename,'H',2);
-        tf = true;
-    end
-
-    function tf = checkRadiusRange(radiusRange) % Radius range has to be a 2-element vector with r(2) > r(1)
-        validateattributes(radiusRange,{'numeric'},{'nonnan','nonsparse',...
-            'integer','positive','finite','vector','numel',2},...
-            mfilename,'R',3);
-        if (length(radiusRange) > 2)
-            error(message('images:imfindcircles:unrecognizedRadiusRange'));
-        end
-        if (radiusRange(1) >= radiusRange(2))
-            error(message('images:imfindcircles:invalidRadiusRange'));
-        end
-        tf = true;
-    end
-
-    function validateCenters
-        if (~(all(parsedInputs.Centers(:,1) <= size(parsedInputs.AccumArray,2)) && ...
-              all(parsedInputs.Centers(:,2) <= size(parsedInputs.AccumArray,1))))
-            error(message('images:imfindcircles:outOfBoundCenters'));
-        end
-    end
-    
 end

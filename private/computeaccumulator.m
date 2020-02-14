@@ -1,4 +1,4 @@
-function [accumMatrix, gradientImg] = computeaccumulator(varargin)
+function [accumMatrix, gradientImg] = computeaccumulator(A, radiusRange)
 %CHACCUM Compute 2D accumulator array using Circular Hough Transform
 %   H = CHACCUM(A, RADIUS) computes the 2D accumulator array H using
 %   Circular Hough Transform for 2D grayscale input image A with the
@@ -8,13 +8,6 @@ function [accumMatrix, gradientImg] = computeaccumulator(varargin)
 %   with radii in the range specified by RADIUS_RANGE. RADIUS_RANGE is a
 %   two-element vector [MIN_RADIUS MAX_RADIUS].
 %
-%   [H, G] = CHACCUM(A, RADIUS_RANGE, ...) also returns the gradient image
-%   G that is used for generating the accumulator array. The Sobel edge
-%   operator is used for computing the gradient.
-%
-%   [H, G] = CHACCUM(A, RADIUS_RANGE,PARAM1,VAL1,PARAM2,VAL2,...) computes
-%   accumulator array using name-value pairs to control aspects of the Circular
-%   Hough Transform. 
 %
 %   Parameters include:
 %
@@ -23,43 +16,14 @@ function [accumMatrix, gradientImg] = computeaccumulator(varargin)
 %
 %           'bright'     : The object is brighter than the background. (Default)
 %           'dark'       : The object is darker than the background.
-% 
-%   'Method' - Specifies the technique used for computing the accumulator
-%              array. Available options are:
-%
-%           'PhaseCode'  : Atherton and Kerbyson's Phase Coding method.
-%                         (Default)
-%           'TwoStage'   : The method used in Two-stage Circular Hough
-%                          Transform.
-%
-%   'EdgeThreshold' - A scalar K in the range [0 1], specifying the gradient 
-%                     threshold for determining edge pixels. K = 0 sets the
-%                     threshold at zero-gradient magnitude, and K = 1 sets
-%                     the threshold at the maximum gradient magnitude in
-%                     the image. A high EdgeThreshold value leads to
-%                     detecting only those circles that have relatively
-%                     strong edges. A low EdgeThreshold value will, in
-%                     addition, lead to detecting circles with relatively
-%                     faint edges. By default, CHACCUM chooses the
-%                     value automatically using the function GRAYTHRESH.
 
-parsedInputs = parse_inputs(varargin{:});
 
-A             = parsedInputs.Image;
-radiusRange   = parsedInputs.RadiusRange;
-method        = lower(parsedInputs.Method);
-objPolarity   = lower(parsedInputs.ObjectPolarity);
-edgeThresh    = parsedInputs.EdgeThreshold;
+method        = 'phasecode';
+objPolarity   = 'bright';
+edgeThresh    = [];
 
 maxNumElemNHoodMat = 1e6; % Maximum number of elements in neighborhood matrix xc allowed, before memory chunking kicks in.
 
-%% Check if the image is flat
-flat = all(A(:) == A(1));
-if (flat)
-    accumMatrix = zeros(size(A,1),size(A,2));
-    gradientImg = zeros(size(A,1),size(A,2));
-    return;
-end
 
 %% Get the input image in the correct format
 A = getGrayImage(A);
@@ -185,101 +149,5 @@ elseif (N == 2)
 else
     iptassert(false,'images:imfindcircles:invalidInputImage'); % This should never happen here.
 end
-
-end
-
-function parsedInputs = parse_inputs(varargin)
-
-narginchk(2,Inf);
-
-persistent parser;
-
-if isempty(parser)
-    checkStringInput = @(x,name) validateattributes(x, ...
-        {'char','string'},{'scalartext'},mfilename,name);
-    parser = inputParser();
-    parser.addRequired('Image',@checkImage);
-    parser.addRequired('RadiusRange',@checkRadiusRange);
-    parser.addParameter('Method','phasecode',@(x) checkStringInput(x,'Method'));
-    parser.addParameter('ObjectPolarity','bright',@(x) checkStringInput(x,'ObjectPolarity'));
-    parser.addParameter('EdgeThreshold',[],@checkEdgeThreshold);
-end
-
-% Parse input
-parser.parse(varargin{:});
-parsedInputs = parser.Results;
-
-% Validate string parameter values
-parsedInputs.Method = checkMethod(parsedInputs.Method);
-parsedInputs.ObjectPolarity = checkObjectPolarity(parsedInputs.ObjectPolarity);
-
-validateRadiusRange(); % If Rmin and Rmax are the same then set R = Rmin.
-
-    function tf = checkImage(A)
-        allowedImageTypes = {'uint8', 'uint16', 'double', 'logical', 'single', 'int16'};
-        validateattributes(A,allowedImageTypes,{'nonempty',...
-            'nonsparse','real'},mfilename,'A',1);
-        N = ndims(A);
-        if (isvector(A) || N > 3)
-            error(message('images:imfindcircles:invalidInputImage'));
-        elseif (N == 3)
-            if (size(A,3) ~= 3)
-                error(message('images:imfindcircles:invalidImageFormat'));
-            end
-        end
-        tf = true;
-    end
-
-    function tf = checkRadiusRange(radiusRange)
-        if (isscalar(radiusRange))
-            validateattributes(radiusRange,{'numeric'},{'nonnan', ...
-                'nonsparse','nonempty','positive','finite','vector'},mfilename,'RADIUS_RANGE',2);
-        else
-            validateattributes(radiusRange,{'numeric'},{'integer','nonnan', ...
-                'nonsparse','nonempty','positive','finite','vector'},mfilename,'RADIUS_RANGE',2);
-        end        
-        if (length(radiusRange) > 2)
-            error(message('images:imfindcircles:unrecognizedRadiusRange'));
-        elseif (length(radiusRange) == 2)
-            if (radiusRange(1) > radiusRange(2))
-                error(message('images:imfindcircles:invalidRadiusRange'));
-            end
-        end
-        tf = true;
-    end
-
-    function str = checkMethod(method)
-        str = validatestring(method, {'twostage','phasecode'}, ...
-            mfilename, 'Method');
-    end
-
-    function str = checkObjectPolarity(objectPolarity)
-        str = validatestring(objectPolarity, {'bright','dark'}, ...
-            mfilename, 'ObjectPolarity');
-    end
-
-    function tf = checkEdgeThreshold(ET)
-        validateattributes(ET,{'numeric'},{'nonnan',...
-            'finite'},mfilename,'EdgeThreshold',5);
-        if (~isempty(ET))
-            if (numel(ET)  == 1)
-                if (ET > 1 || ET < 0)
-                    error(message('images:imfindcircles:outOfRangeEdgeThreshold'));
-                end
-            else
-                error(message('images:imfindcircles:invalidEdgeThreshold'));
-            end
-        end
-        tf = true;
-    end
-
-    function validateRadiusRange
-        if (length(parsedInputs.RadiusRange) == 2)
-            if (parsedInputs.RadiusRange(1) == parsedInputs.RadiusRange(2))
-                parsedInputs.RadiusRange = parsedInputs.RadiusRange(1);
-            end
-        end
-        parsedInputs.RadiusRange = double(parsedInputs.RadiusRange);
-    end
 
 end

@@ -1,4 +1,4 @@
-function [centers, metric] = findcirclecenter(varargin)
+function [centers, metric] = findcirclecenter(accumMatrix, suppThreshold)
 %CHCENTERS Find circle center locations from the Circular Hough Transform accumulator array 
 %   CENTERS = CHCENTERS(H, SUPRESSIONTHRESH, SIGMA) finds all the potential
 %   circle center locations from the accumulator array H. CENTERS is a
@@ -27,11 +27,7 @@ function [centers, metric] = findcirclecenter(varargin)
 %  the magnitude of the accumulator array peak associated with each circle
 %  in the column vector METRIC. CENTERS is sorted based on METRIC values.
 
-parsedInputs = parse_inputs(varargin{:});
-
-accumMatrix   = parsedInputs.AccumArray;
-suppThreshold = parsedInputs.SuppressionThresh;  
-sigma         = parsedInputs.Sigma;
+sigma = [];
 medFiltSize = 5; % Size of the median filter
  
 centers = [];
@@ -82,47 +78,5 @@ function accumMatrix = gaussianFilter(accumMatrix, sigma)
     filtSize = min(filtSize + ceil(rem(filtSize,2)), min(size(accumMatrix))); % filtSize = Smallest odd integer greater than sigma*3
     gaussFilt = fspecial('gaussian',[filtSize filtSize],sigma);
     accumMatrix = imfilter(accumMatrix, gaussFilt, 'same');
-end
-
-function parsedInputs = parse_inputs(varargin)
-
-narginchk(1,3);
-
-persistent parser;
-
-if(isempty(parser))
-    parser = inputParser();
-
-    parser.addRequired('AccumArray',@checkAccumArray);
-    parser.addOptional('SuppressionThresh',0.2,@checkSuppressionThresh);
-    parser.addOptional('Sigma',[],@checkSigma);
-end
-
-% Parse input
-parser.parse(varargin{:});
-parsedInputs = parser.Results;
-
-    function tf = checkAccumArray(accumMatrix)
-        validateattributes(accumMatrix,{'numeric'},{'nonempty',...
-            'nonsparse','2d'},mfilename,'H',1);
-        tf = true;
-    end
-
-    function tf = checkSuppressionThresh(ST)
-        validateattributes(ST,{'numeric'},{'nonempty','nonnan',...
-            'finite','scalar'},mfilename,'SuppressionThresh',2);
-        if(ST > 1 || ST < 0)
-            error(message('images:imfindcircles:outOfRangeSuppressionThresh')); % Change error ID and add new entry to message catalog
-        end
-        tf = true;
-    end
-
-    function tf = checkSigma(sigma)
-        validateattributes(sigma,{'numeric'},{'nonempty','nonnan',...
-            'nonsparse','positive','finite','scalar'},mfilename,'Sigma',3);
-        
-        tf = true;
-    end            
-
 end
 

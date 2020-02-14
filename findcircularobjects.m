@@ -12,11 +12,6 @@ function [centers, r_estimated] = findcircularobjects(A, radiusRange, sensitivit
 %   two-element vector [MIN_RADIUS MAX_RADIUS], where MIN_RADIUS and
 %   MAX_RADIUS have integer values. The estimated radii, in pixels, for the
 %   circles are returned in the column vector RADII.
-%
-%   [CENTERS, RADII, METRIC] = IMFINDCIRCLES(A, RADIUS_RANGE) also
-%   returns the magnitude of the accumulator array peak associated with
-%   each circle in the column vector METRIC. CENTERS and RADII are
-%   sorted in descending order of their corresponding METRIC values.
 % 
 %   [CENTERS, RADII, METRIC] = IMFINDCIRCLES(...,PARAM1,VAL1,PARAM2,VAL2,...)
 %   finds circles using name-value pairs to control aspects of the Circular 
@@ -24,20 +19,6 @@ function [centers, r_estimated] = findcircularobjects(A, radiusRange, sensitivit
 %
 %   Parameters include:
 %
-%   'ObjectPolarity' - Specifies the polarity of the circular object with
-%                      respect to the background. Available options are:
-%
-%           'bright'     : The object is brighter than the background. (Default)
-%           'dark'       : The object is darker than the background.
-% 
-%   'Method' - Specifies the technique used for computing the accumulator
-%              array. Available options are:
-%
-%           'PhaseCode'  : Atherton and Kerbyson's Phase Coding method.
-%                         (Default)
-%           'TwoStage'   : The method used in Two-stage Circular Hough
-%                          Transform.
-% 
 %   'Sensitivity '  - Specifies the sensitivity factor in the range [0 1]
 %                     for finding circles. A high sensitivity value leads
 %                     to detecting more circles, including weak or
@@ -83,29 +64,6 @@ function [centers, r_estimated] = findcircularobjects(A, radiusRange, sensitivit
 %         % Draw the circle perimeter for the five strongest circles
 %         viscircles(centersStrong5, radiiStrong5,'Color','b');
 %
-%   Example 2
-%   ---------
-%   % Find both bright and dark circles in the image
-%         I = imread('circlesBrightDark.png');
-%         imshow(I)
-% 
-%         Rmin = 30;
-%         Rmax = 65;
-% 
-%         % Find all the bright circles in the image
-%         [centersBright, radiiBright] = imfindcircles(I,[Rmin Rmax], ...
-%                                       'ObjectPolarity','bright');
-% 
-%         % Find all the dark circles in the image
-%         [centersDark, radiiDark] = imfindcircles(I, [Rmin Rmax], ...
-%                                       'ObjectPolarity','dark');
-% 
-%         % Plot bright circles in blue
-%         viscircles(centersBright, radiiBright,'Color','b');
-% 
-%         % Plot dark circles in dashed red boundaries
-%         viscircles(centersDark, radiiDark);
-%
 
 centers = [];
 r_estimated = [];
@@ -116,8 +74,7 @@ if (radiusRange(1) <= 5)
 end
 
 %% Compute the accumulator array
-[accumMatrix, gradientImg] = computeaccumulator(A, radiusRange, 'Method','phasecode','ObjectPolarity', ...
-                        'bright','EdgeThreshold',[]);
+[accumMatrix, gradientImg] = computeaccumulator(A, radiusRange);
 
 %% Estimate the centers
 accumThresh = 1 - sensitivity;
@@ -130,10 +87,6 @@ centers = centers(idx2Keep,:);
 
 %% Estimate radii
 if (nargout > 1)
-    if (length(radiusRange) == 1)
-        r_estimated = repmat(radiusRange,size(centers,1),1);
-    else
-        r_estimated = phasecoding(centers, accumMatrix, radiusRange);                
-    end    
+    r_estimated = phasecoding(centers, accumMatrix, radiusRange);                
 end
 end
