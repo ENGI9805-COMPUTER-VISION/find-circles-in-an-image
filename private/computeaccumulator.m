@@ -99,25 +99,10 @@ t = Gmax * cast(edgeThresh,'like',gradientImg);
 end
 
 function A = getGrayImage(A)
-N = ndims(A);
-if (N == 3) % RGB Image
-    A = rgb2gray(A);
-    if (isinteger(A))
-        A = im2single(A); % If A is an integer, cast it to floating-point
-    end
-    
-elseif (N == 2)
-    if (islogical(A)) % Binary image
-        filtStd = 1.5;
-        filtSize = ceil(filtStd*3); % filtSize = Smallest odd integer greater than filtStd*3
-        gaussFilt = fspecial('gaussian',[filtSize filtSize],filtStd);
-        A = imfilter(im2single(A),gaussFilt,'replicate');
-    elseif (isinteger(A))
-        A = im2single(A); % If A is an integer, cast it to floating-point
-    end
-    
-else
-    iptassert(false,'images:imfindcircles:invalidInputImage'); % This should never happen here.
+
+A = rgb2gray(A);
+if (isinteger(A))
+    A = im2single(A); % If A is an integer, cast it to floating-point
 end
 
 end
