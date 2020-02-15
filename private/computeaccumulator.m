@@ -8,17 +8,7 @@ function [accumMatrix, gradientImg] = computeaccumulator(A, radiusRange)
 %   with radii in the range specified by RADIUS_RANGE. RADIUS_RANGE is a
 %   two-element vector [MIN_RADIUS MAX_RADIUS].
 %
-%
-%   Parameters include:
-%
-%   'ObjectPolarity' - Specifies the polarity of the circular object with
-%                      respect to the background. Available options are:
-%
-%           'bright'     : The object is brighter than the background. (Default)
-%           'dark'       : The object is darker than the background.
 
-
-method        = 'phasecode';
 objPolarity   = 'bright';
 edgeThresh    = [];
 
@@ -49,21 +39,10 @@ switch (objPolarity)
 end
 
 %% Compute the weights for votes for different radii
-switch (method)
-    case 'twostage'
-        w0 = 1 ./ (2*pi*radiusRange); % Circumference normalization (Inverse circumference weighting)
-    case 'phasecode'
-        if (length(radiusRange) > 1)
-            lnR = log(radiusRange);
-            phi = ((lnR - lnR(1))/(lnR(end) - lnR(1))*2*pi) - pi; % Modified form of Log-coding from Eqn. 8 in [3]
-        else
-            phi = 0;
-        end
-        Opca = exp(sqrt(-1)*phi);
-        w0 = Opca./(2*pi*radiusRange);
-    otherwise
-        iptassert(false,'images:imfindcircles:unrecognizedMethod'); % Should never happen
-end
+lnR = log(radiusRange);
+phi = ((lnR - lnR(1))/(lnR(end) - lnR(1))*2*pi) - pi; % Modified form of Log-coding from Eqn. 8 in [3]
+Opca = exp(sqrt(-1)*phi);
+w0 = Opca./(2*pi*radiusRange);
 
 %% Computing the accumulator array
 

@@ -13,37 +13,14 @@ function [centers, metric] = findcirclecenter(accumMatrix, suppThreshold)
 %                     local maxima in the accumulator array with h-maxima
 %                     value values lower than SUPRESSIONTHRESH is rejected.
 %                     Fewer circles are detected as the value of Q
-%                     increases. Default: Q = 0.2.
-%             
-%   SIGMA             Positive real scalar value which specifies the standard
-%                     deviation of the Gaussian filter used for smoothing
-%                     the accumulator array prior to the estimation of the
-%                     circle centers. By default no smoothing filter is
-%                     applied on the accumulator array. If SIGMA is
-%                     specified, the size of the filter is chosen
-%                     automatically, based on SIGMA.
-% 
-%  [CENTERS, METRIC] = CHCENTERS(H, SUPRESSIONTHRESH, SIGMA) also returns
-%  the magnitude of the accumulator array peak associated with each circle
-%  in the column vector METRIC. CENTERS is sorted based on METRIC values.
+%                     increases.
 
-sigma = [];
 medFiltSize = 5; % Size of the median filter
  
 centers = [];
 metric = [];
 %% Use the magnitude - Accumulator array can be complex. 
 accumMatrix = abs(accumMatrix);
-
-%% Check if the accumulator array is flat
-flat = all(accumMatrix(:) == accumMatrix(1));
-if (flat)
-    return;
-end
-%% Filter the accumulator array
-if (~isempty(sigma))
-    accumMatrix = gaussianFilter(accumMatrix, sigma);
-end
 
 %% Pre-process the accumulator array
 if (min(size(accumMatrix)) > medFiltSize)
@@ -72,11 +49,3 @@ if (~isempty(s))
 end
 
 end
-
-function accumMatrix = gaussianFilter(accumMatrix, sigma)
-    filtSize = ceil(sigma*3);
-    filtSize = min(filtSize + ceil(rem(filtSize,2)), min(size(accumMatrix))); % filtSize = Smallest odd integer greater than sigma*3
-    gaussFilt = fspecial('gaussian',[filtSize filtSize],sigma);
-    accumMatrix = imfilter(accumMatrix, gaussFilt, 'same');
-end
-
