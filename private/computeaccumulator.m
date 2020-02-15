@@ -9,8 +9,7 @@ function [accumMatrix, gradientImg] = computeaccumulator(A, radiusRange)
 %   two-element vector [MIN_RADIUS MAX_RADIUS].
 %
 
-objPolarity   = 'bright';
-edgeThresh    = [];
+edgeThresh = [];
 
 maxNumElemNHoodMat = 1e6; % Maximum number of elements in neighborhood matrix xc allowed, before memory chunking kicks in.
 
@@ -26,17 +25,9 @@ A = getGrayImage(A);
 idxE = sub2ind(size(gradientImg), Ey, Ex);
 
 %% Identify different radii for votes
-if (length(radiusRange) > 1)
-    radiusRange = radiusRange(1):0.5:radiusRange(2);
-end
-switch (objPolarity)
-    case 'bright'
-        RR = radiusRange;
-    case 'dark'
-        RR = -radiusRange;
-    otherwise
-        error(message('images:imfindcircles:unrecognizedObjectPolarity')); % Should never happen
-end
+radiusRange = radiusRange(1):0.5:radiusRange(2);
+
+RR = radiusRange;
 
 %% Compute the weights for votes for different radii
 lnR = log(radiusRange);
